@@ -322,18 +322,18 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
-<script>
+<script type="module">
+  import { ISLA_PLAN } from "./plans/isla.plan.js";
   // ---- storage
   const KEY_SETTINGS = "kid_plan_settings_v1";
   const KEY_STATUS   = "kid_plan_status_v1"; // per week/day
 
   // ---- weeks
-  const TOTAL_WEEKS = 12;
+  const TOTAL_WEEKS = ISLA_PLAN.totalWeeks;
 
   function weekPhase(w){
-    if (w <= 4) return { name: "Base", note: "Build great habits + perfect form. Same moves, better quality each week." };
-    if (w <= 8) return { name: "Build", note: "Small progression: a little more volume/time, plus new variations." };
-    return { name: "Sharpen", note: "More variety: crisp speed, steady strength, and slightly longer aerobic." };
+    const phase = ISLA_PLAN.phases.find((p)=> w <= p.maxWeek) || ISLA_PLAN.phases[ISLA_PLAN.phases.length - 1];
+    return { name: phase.name, note: phase.note };
   }
 
   // Rotate exercise variations so the plan changes week-to-week.
@@ -347,69 +347,7 @@
   }
 
   // ---- exercise library (images optional)
-  // Put images in /assets/img/ and update filenames below.
-  const EX = {
-    "Box Squat": {
-      img: "assets/img/box-squat.jpg",
-      cues: ["Sit back to a chair/box", "Knees track over toes", "Stand tall at the top"],
-      note: "If knees feel weird, make the box higher."
-    },
-    "Incline Push-Up": {
-      img: "assets/img/incline-pushup.jpg",
-      cues: ["Body straight", "Hands on bench/sofa", "Chest to edge, then push"],
-      note: "Harder = lower the hands."
-    },
-    "Single-Leg Balance Reach": {
-      img: "assets/img/single-leg-reach.jpg",
-      cues: ["Soft knee", "Reach gently", "Keep hips level"],
-      note: "Quality > distance."
-    },
-    "Bear Crawl": {
-      img: "assets/img/bear-crawl.jpg",
-      cues: ["Knees hover", "Small steps", "Back flat"],
-      note: "Stop before form breaks."
-    },
-    "Plank Shoulder Taps": {
-      img: "assets/img/plank-shoulder-taps.jpg",
-      cues: ["Feet wider", "Hips still", "Tap gently"],
-      note: "Knees down is OK."
-    },
-    "A-Skips": {
-      img: "assets/img/a-skips.jpg",
-      cues: ["Tall posture", "Quick feet", "Arms like running"],
-      note: "Stop while still snappy."
-    },
-    "Side Shuffle": {
-      img: "assets/img/side-shuffle.jpg",
-      cues: ["Stay low", "Don’t cross feet", "Quick, light steps"],
-      note: "Great for court sports."
-    },
-    "Backpedal + Sprint": {
-      img: "assets/img/backpedal-sprint.jpg",
-      cues: ["Short back steps", "Turn, then go", "Fast but controlled"],
-      note: "Only a few reps."
-    },
-    "DB Romanian Deadlift": {
-      img: "assets/img/db-rdl.jpg",
-      cues: ["Hips back", "Flat back", "Feel hamstrings"],
-      note: "Light weights. Perfect form only."
-    },
-    "Band/DB Row": {
-      img: "assets/img/row.jpg",
-      cues: ["Shoulders down", "Pull to ribs", "Slow return"],
-      note: "Great for posture and shoulder health."
-    },
-    "Side Plank": {
-      img: "assets/img/side-plank.jpg",
-      cues: ["Straight line", "Hips up", "Breathe"],
-      note: "Knees down variation is fine."
-    },
-    "Dead Bug": {
-      img: "assets/img/dead-bug.jpg",
-      cues: ["Back flat", "Slow legs", "Breathe out"],
-      note: "Control beats speed."
-    }
-  };
+  const EX = ISLA_PLAN.exercises;
 
   // ---- plan builder (5–6 days + rest)
   function buildPlan(cfg){
@@ -419,6 +357,9 @@
 
     const phase = weekPhase(Number(cfg.week));
     const v = weekVariant(Number(cfg.week));
+
+    const variations = ISLA_PLAN.variations;
+    const keys = ISLA_PLAN.exerciseKeys;
 
     // ---- scaling (week-based progression)
     // Aerobic: +2 min each week within a phase, capped.
@@ -440,203 +381,96 @@
     if (phase.name === "Sharpen") speedReps = Math.min(speedReps + (inSeason ? 0 : 1), 5);
 
     // ---- weekly exercise variations (A/B/C)
-    // Keep patterns the same, swap variations to keep it fresh.
-    const squatVar = v === 0
-      ? item("Box Squat — 8–10", "Box Squat")
-      : v === 1
-        ? item("Tempo Box Squat (3 sec down) — 6–8", "Box Squat")
-        : item("Pause Box Squat (1 sec on box) — 6–8", "Box Squat");
+    const squatVar = item(variations.squat[v], keys.squat);
+    const pushVar = item(variations.push[v], keys.push);
+    const balanceVar = item(variations.balance[v], keys.balance);
+    const crawlVar = item(variations.crawl[v], keys.crawl);
+    const coreVar = item(variations.core[v], keys.core);
+    const hingeVar = item(variations.hinge[v], keys.hinge);
+    const rowVar = item(variations.row[v], keys.row);
+    const speedSet = (variations.speedSets[v] || []).map(({ text, exKey })=> item(fillTemplate(text, { reps: speedReps }), exKey));
 
-    const pushVar = v === 0
-      ? item("Incline Push-Up — 8–12", "Incline Push-Up")
-      : v === 1
-        ? item("Incline Push-Up (slow down) — 6–10", "Incline Push-Up")
-        : item("Incline Push-Up (narrow hands) — 6–10", "Incline Push-Up");
-
-    const balanceVar = v === 0
-      ? item("Single-Leg Balance Reach — 6/side", "Single-Leg Balance Reach")
-      : v === 1
-        ? item("Single-Leg Balance Reach (eyes forward) — 6/side", "Single-Leg Balance Reach")
-        : item("Single-Leg Balance Reach (hold 2 sec) — 5/side", "Single-Leg Balance Reach");
-
-    const crawlVar = v === 0
-      ? item("Bear Crawl — 15–20m", "Bear Crawl")
-      : v === 1
-        ? item("Bear Crawl (backwards) — 10–15m", "Bear Crawl")
-        : item("Bear Crawl (slow + quiet feet) — 10–15m", "Bear Crawl");
-
-    const coreVar = v === 0
-      ? item("Plank Shoulder Taps — 10 taps", "Plank Shoulder Taps")
-      : v === 1
-        ? item("Plank Hold — 20–30s", "Plank Shoulder Taps")
-        : item("Plank Shoulder Taps — 12 taps", "Plank Shoulder Taps");
-
-    const speedSet = v === 0
-      ? [
-          item(`A-Skips — ${speedReps}×20m`, "A-Skips"),
-          item(`Side Shuffle — ${speedReps}×15m`, "Side Shuffle"),
-          item(`Backpedal + Sprint — ${speedReps} reps`, "Backpedal + Sprint")
-        ]
-      : v === 1
-        ? [
-            item(`A-Skips — ${speedReps}×20m`, "A-Skips"),
-            item(`Side Shuffle — ${speedReps}×15m`, "Side Shuffle"),
-            item(`Acceleration (10–15m) — ${speedReps} reps`, "")
-          ]
-        : [
-            item(`Fast feet (5 sec) + relax — ${speedReps} reps`, ""),
-            item(`Side Shuffle — ${speedReps}×15m`, "Side Shuffle"),
-            item(`Backpedal + Sprint — ${speedReps} reps`, "Backpedal + Sprint")
-          ];
-
-    const hingeVar = v === 0
-      ? item("DB Romanian Deadlift (light) — 8–10", "DB Romanian Deadlift")
-      : v === 1
-        ? item("DB Romanian Deadlift (slow down) — 6–8", "DB Romanian Deadlift")
-        : item("DB Romanian Deadlift (pause mid-shin) — 6–8", "DB Romanian Deadlift");
-
-    const rowVar = v === 0
-      ? item("Band/DB Row — 10", "Band/DB Row")
-      : v === 1
-        ? item("Band/DB Row (pause 1 sec) — 8–10", "Band/DB Row")
-        : item("Band/DB Row (slow return) — 8–10", "Band/DB Row");
-
-    // ---- Days
-    const day1 = {
-      day: "Day 1",
-      focus: "Strength + Coordination",
-      tag: `Variation ${variantLabel(v)} • ${phase.name}`,
-      blocks: [
-        block("Warm-up (5–7 min)", [
-          item("March → jog in place", ""),
-          item("Arm swings + trunk rotations", ""),
-          item("Hip circles", ""),
-          item("World’s greatest stretch", "")
-        ]),
-        block(`Main (Rounds: ${strengthRounds})`, [
-          squatVar,
-          pushVar,
-          balanceVar,
-          crawlVar,
-          coreVar
-        ]),
-        block("Finish (fun, 5 min)", [
-          item(v === 2 ? "Cone zig-zag (easy)" : "Footwork ladder / cone pattern", ""),
-          item("Stop while still sharp", "")
-        ])
-      ]
+    const values = {
+      variant: variantLabel(v),
+      phase: phase.name,
+      strengthRounds,
+      finishDrill: variations.finish[v],
+      aerobicMain,
+      aerobicWarmup: ISLA_PLAN.aerobic.warmup,
+      aerobicCoolDown: ISLA_PLAN.aerobic.coolDown,
+      aerobicSteadyNote: ISLA_PLAN.aerobic.steadyNote,
+      seasonTag: inSeason ? "In-season" : "Off-season",
+      splitSquat: variations.splitSquat[v],
+      sidePlank: variations.sidePlank[v],
+      deadBug: variations.deadBug[v],
+      runWalk: inSeason ? ISLA_PLAN.runWalk.inSeason : (phase.name === "Sharpen" ? ISLA_PLAN.runWalk.sharpen : ISLA_PLAN.runWalk.build),
+      crossTrainerTime: clamp(aerobicMain + 8, 20, 40),
+      aerobicTag: inSeason ? "Easy" : "Build",
+      funBlockTitle: inSeason ? ISLA_PLAN.funConditioning.titleInSeason : ISLA_PLAN.funConditioning.titleOffSeason,
+      funRule: ISLA_PLAN.funConditioning.rule,
     };
 
-    const day2 = {
-      day: "Day 2",
-      focus: "Aerobic (Cross Trainer)",
-      tag: `Steady • ${phase.name}`,
-      blocks: [
-        block("Warm-up", [ item("Easy pace — 5 min", "") ]),
-        block("Main", [
-          item(`Steady aerobic — ${aerobicMain} min`, ""),
-          item("Pace: can talk in full sentences", "")
-        ]),
-        block("Cool-down", [ item("Easy pace — 3–5 min", "") ])
-      ]
+    const refs = {
+      items: { squatVar, pushVar, balanceVar, crawlVar, coreVar, hingeVar, rowVar },
+      lists: { speedSet }
     };
 
-    const day3 = {
-      day: "Day 3",
-      focus: "Speed + Movement Skills",
-      tag: `Variation ${variantLabel(v)} • ${inSeason ? "In-season" : "Off-season"}`,
-      blocks: [
-        block("Warm-up (5–7 min)", [
-          item("Easy jog or march", ""),
-          item("Leg swings", ""),
-          item("2 short relaxed accelerations", "")
-        ]),
-        block("Skills (quality reps)", [
-          ...speedSet,
-          item("Reaction game (clap/call) — 4–6 reps", "")
-        ]),
-        block("Rule", [ item("Stop while she still looks fast", "") ])
-      ]
-    };
+    const { day1, day2, day3, day4, day5, day6, day7 } = ISLA_PLAN.days;
 
-    const day4 = {
-      day: "Day 4",
-      focus: "Strength + Core",
-      tag: `Variation ${variantLabel(v)} • Support running`,
-      blocks: [
-        block("Warm-up", [
-          item("March → light jog", ""),
-          item("Hip hinge practice", "")
-        ]),
-        block(`Main (Rounds: ${strengthRounds})`, [
-          item(v === 1 ? "Split Squat (short stance, slow) — 6/side" : "Split Squat (short stance) — 6–8/side", ""),
-          hingeVar,
-          rowVar,
-          item(v === 2 ? "Side Plank — 25–35s/side" : "Side Plank — 20–30s/side", "Side Plank"),
-          item(v === 0 ? "Dead Bug — 8/side" : "Dead Bug — 10/side", "Dead Bug")
-        ]),
-        block("Rule", [
-          item("No grinding reps. Perfect form only.", "")
-        ])
-      ]
-    };
+    const builtDay1 = buildDay(day1, values, refs);
+    const builtDay2 = buildDay(day2, values, refs);
+    const builtDay3 = buildDay(day3, values, refs);
+    const builtDay4 = buildDay(day4, values, refs);
+    const builtDay5 = buildDay(day5, values, refs);
 
-    const day5 = {
-      day: "Day 5",
-      focus: "Aerobic Endurance",
-      tag: inSeason ? "Easy" : "Build",
-      blocks: [
-        block("Option A: Cross trainer", [
-          item(`Easy–moderate — ${clamp(aerobicMain + 8, 20, 40)} min`, ""),
-          item("Smooth, steady pace", "")
-        ]),
-        block("Option B: Run/Walk (only if not too many team sessions)", [
-          item(inSeason ? "Keep it very easy (no hard intervals)." : (phase.name === "Sharpen" ? "4 min run / 2 min walk × 6" : "3 min run / 2 min walk × 6–8"), ""),
-          item("If anything hurts: switch to cross trainer.", "")
-        ])
-      ]
-    };
-
-    const day6 = {
-      day: "Day 6",
-      focus: "Fun Conditioning (Optional)",
-      tag: "Play",
-      blocks: [
-        block(inSeason ? "Pick ONE (10–25 min)" : "Pick ONE (20–30 min)", [
-          item("Small-sided game / backyard drills", ""),
-          item("Bike ride", ""),
-          item("Obstacle course", ""),
-          item("Relays", "")
-        ]),
-        block("Rule", [
-          item("This should feel like play.", "")
-        ])
-      ]
-    };
-
-    const day7 = {
-      day: "Day 7",
-      focus: "Rest",
-      tag: "Recover",
-      blocks: [
-        block("Rest day", [
-          item("No structured training today.", ""),
-          item("If she wants: an easy walk + stretch is fine.", "")
-        ])
-      ]
-    };
-
-    // In-season: suggest skipping optional Day 6 if team load is high.
+    const extras = [];
     if (inSeason && easy){
-      day6.blocks.unshift(block("In-season note", [
-        item("If you already have games/training, skip this day.", "")
+      extras.push(block(ISLA_PLAN.funConditioning.inSeasonNoteTitle, [
+        item(ISLA_PLAN.funConditioning.inSeasonNote, "")
       ]));
     }
 
-    return [day1, day2, day3, day4, day5, day6, day7];
+    const builtDay6 = buildDay(day6, values, refs, extras);
+    const builtDay7 = buildDay(day7, values, refs);
+
+    return [builtDay1, builtDay2, builtDay3, builtDay4, builtDay5, builtDay6, builtDay7];
   }
 
   // ---- helpers
+  function fillTemplate(str, values){
+    return String(str).replace(/\{(\w+)\}/g, (_, key)=> (key in values ? values[key] : `{${key}}`));
+  }
+
+  function buildBlocks(templates, values, refs){
+    return templates.map((blk)=>{
+      const title = fillTemplate(blk.title, values);
+      const items = [];
+      blk.items.forEach((entry)=>{
+        if (entry.listRef && refs.lists[entry.listRef]){
+          refs.lists[entry.listRef].forEach((it)=> items.push(it));
+          return;
+        }
+        if (entry.ref && refs.items[entry.ref]){
+          items.push(refs.items[entry.ref]);
+          return;
+        }
+        items.push(item(fillTemplate(entry.text, values), entry.exKey || ""));
+      });
+      return block(title, items);
+    });
+  }
+
+  function buildDay(template, values, refs, extraBlocks){
+    const blocks = buildBlocks(template.blocks, values, refs);
+    const prefix = extraBlocks && extraBlocks.length ? extraBlocks : [];
+    return {
+      day: template.day,
+      focus: template.focus,
+      tag: fillTemplate(template.tagTemplate, values),
+      blocks: [...prefix, ...blocks]
+    };
+  }
+
   function block(title, items){ return { title, items }; }
   function item(text, exKey){
     // exKey = key into EX (optional)
