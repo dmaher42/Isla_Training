@@ -321,9 +321,19 @@
   const TOTAL_WEEKS = 12;
 
   function weekPhase(w){
-    if (w <= 4) return { name: "Base", note: "Build great habits + perfect form." };
-    if (w <= 8) return { name: "Build", note: "Slightly longer aerobic work + one extra set." };
-    return { name: "Sharpen", note: "Short, crisp speed + steady strength." };
+    if (w <= 4) return { name: "Base", note: "Build great habits + perfect form. Same moves, better quality each week." };
+    if (w <= 8) return { name: "Build", note: "Small progression: a little more volume/time, plus new variations." };
+    return { name: "Sharpen", note: "More variety: crisp speed, steady strength, and slightly longer aerobic." };
+  }
+
+  // Rotate exercise variations so the plan changes week-to-week.
+  // 0=A, 1=B, 2=C (repeat)
+  function weekVariant(w){
+    return (w - 1) % 3;
+  }
+
+  function variantLabel(v){
+    return v === 0 ? "A" : v === 1 ? "B" : "C";
   }
 
   // ---- exercise library (images optional)
@@ -397,15 +407,95 @@
     const easy = cfg.effort === "easy";
     const len = Number(cfg.sessionLen);
 
-    // Scaling knobs
-    const aerobicMain = clamp(len - 10, 12, 30);
-    const strengthRounds = len <= 25 ? 2 : len <= 35 ? 3 : 4;
-    const speedReps = inSeason ? 3 : 4; // keep speed light in-season
+    const phase = weekPhase(Number(cfg.week));
+    const v = weekVariant(Number(cfg.week));
 
+    // ---- scaling (week-based progression)
+    // Aerobic: +2 min each week within a phase, capped.
+    const baseAerobic = clamp(len - 12, 12, 30);
+    const aerobicBump = (phase.name === "Base") ? (cfg.week - 1) * 1 :
+                        (phase.name === "Build") ? 4 + (cfg.week - 5) * 1 :
+                        8 + (cfg.week - 9) * 1;
+    const aerobicMain = clamp(baseAerobic + aerobicBump, 12, 30);
+
+    // Strength rounds: Base 2–3, Build 3, Sharpen 3–4 depending on session length.
+    let strengthRounds = len <= 25 ? 2 : len <= 35 ? 3 : 4;
+    if (phase.name === "Base") strengthRounds = Math.min(strengthRounds, 3);
+    if (phase.name === "Build") strengthRounds = Math.max(2, Math.min(strengthRounds, 3));
+    if (phase.name === "Sharpen") strengthRounds = Math.max(3, strengthRounds);
+
+    // Speed reps: fewer in-season; slightly more off-season; never to fatigue.
+    let speedReps = inSeason ? 3 : 4;
+    if (phase.name === "Base") speedReps = Math.min(speedReps, 3);
+    if (phase.name === "Sharpen") speedReps = Math.min(speedReps + (inSeason ? 0 : 1), 5);
+
+    // ---- weekly exercise variations (A/B/C)
+    // Keep patterns the same, swap variations to keep it fresh.
+    const squatVar = v === 0
+      ? item("Box Squat — 8–10", "Box Squat")
+      : v === 1
+        ? item("Tempo Box Squat (3 sec down) — 6–8", "Box Squat")
+        : item("Pause Box Squat (1 sec on box) — 6–8", "Box Squat");
+
+    const pushVar = v === 0
+      ? item("Incline Push-Up — 8–12", "Incline Push-Up")
+      : v === 1
+        ? item("Incline Push-Up (slow down) — 6–10", "Incline Push-Up")
+        : item("Incline Push-Up (narrow hands) — 6–10", "Incline Push-Up");
+
+    const balanceVar = v === 0
+      ? item("Single-Leg Balance Reach — 6/side", "Single-Leg Balance Reach")
+      : v === 1
+        ? item("Single-Leg Balance Reach (eyes forward) — 6/side", "Single-Leg Balance Reach")
+        : item("Single-Leg Balance Reach (hold 2 sec) — 5/side", "Single-Leg Balance Reach");
+
+    const crawlVar = v === 0
+      ? item("Bear Crawl — 15–20m", "Bear Crawl")
+      : v === 1
+        ? item("Bear Crawl (backwards) — 10–15m", "Bear Crawl")
+        : item("Bear Crawl (slow + quiet feet) — 10–15m", "Bear Crawl");
+
+    const coreVar = v === 0
+      ? item("Plank Shoulder Taps — 10 taps", "Plank Shoulder Taps")
+      : v === 1
+        ? item("Plank Hold — 20–30s", "Plank Shoulder Taps")
+        : item("Plank Shoulder Taps — 12 taps", "Plank Shoulder Taps");
+
+    const speedSet = v === 0
+      ? [
+          item(`A-Skips — ${speedReps}×20m`, "A-Skips"),
+          item(`Side Shuffle — ${speedReps}×15m`, "Side Shuffle"),
+          item(`Backpedal + Sprint — ${speedReps} reps`, "Backpedal + Sprint")
+        ]
+      : v === 1
+        ? [
+            item(`A-Skips — ${speedReps}×20m`, "A-Skips"),
+            item(`Side Shuffle — ${speedReps}×15m`, "Side Shuffle"),
+            item(`Acceleration (10–15m) — ${speedReps} reps`, "")
+          ]
+        : [
+            item(`Fast feet (5 sec) + relax — ${speedReps} reps`, ""),
+            item(`Side Shuffle — ${speedReps}×15m`, "Side Shuffle"),
+            item(`Backpedal + Sprint — ${speedReps} reps`, "Backpedal + Sprint")
+          ];
+
+    const hingeVar = v === 0
+      ? item("DB Romanian Deadlift (light) — 8–10", "DB Romanian Deadlift")
+      : v === 1
+        ? item("DB Romanian Deadlift (slow down) — 6–8", "DB Romanian Deadlift")
+        : item("DB Romanian Deadlift (pause mid-shin) — 6–8", "DB Romanian Deadlift");
+
+    const rowVar = v === 0
+      ? item("Band/DB Row — 10", "Band/DB Row")
+      : v === 1
+        ? item("Band/DB Row (pause 1 sec) — 8–10", "Band/DB Row")
+        : item("Band/DB Row (slow return) — 8–10", "Band/DB Row");
+
+    // ---- Days
     const day1 = {
       day: "Day 1",
       focus: "Strength + Coordination",
-      tag: "Move well",
+      tag: `Variation ${variantLabel(v)} • ${phase.name}`,
       blocks: [
         block("Warm-up (5–7 min)", [
           item("March → jog in place", ""),
@@ -414,14 +504,14 @@
           item("World’s greatest stretch", "")
         ]),
         block(`Main (Rounds: ${strengthRounds})`, [
-          item(`Box Squat — 8–10`, "Box Squat"),
-          item(`Incline Push-Up — 8–12`, "Incline Push-Up"),
-          item(`Single-Leg Balance Reach — 6/side`, "Single-Leg Balance Reach"),
-          item(`Bear Crawl — 15–20m`, "Bear Crawl"),
-          item(`Plank Shoulder Taps — 10 taps`, "Plank Shoulder Taps"),
+          squatVar,
+          pushVar,
+          balanceVar,
+          crawlVar,
+          coreVar
         ]),
         block("Finish (fun, 5 min)", [
-          item("Footwork ladder / cone pattern", ""),
+          item(v === 2 ? "Cone zig-zag (easy)" : "Footwork ladder / cone pattern", ""),
           item("Stop while still sharp", "")
         ])
       ]
@@ -430,7 +520,7 @@
     const day2 = {
       day: "Day 2",
       focus: "Aerobic (Cross Trainer)",
-      tag: "Build engine",
+      tag: `Steady • ${phase.name}`,
       blocks: [
         block("Warm-up", [ item("Easy pace — 5 min", "") ]),
         block("Main", [
@@ -444,7 +534,7 @@
     const day3 = {
       day: "Day 3",
       focus: "Speed + Movement Skills",
-      tag: "Fast, not tired",
+      tag: `Variation ${variantLabel(v)} • ${inSeason ? "In-season" : "Off-season"}`,
       blocks: [
         block("Warm-up (5–7 min)", [
           item("Easy jog or march", ""),
@@ -452,9 +542,7 @@
           item("2 short relaxed accelerations", "")
         ]),
         block("Skills (quality reps)", [
-          item(`A-Skips — ${speedReps}×20m`, "A-Skips"),
-          item(`Side Shuffle — ${speedReps}×15m`, "Side Shuffle"),
-          item(`Backpedal + Sprint — ${speedReps} reps`, "Backpedal + Sprint"),
+          ...speedSet,
           item("Reaction game (clap/call) — 4–6 reps", "")
         ]),
         block("Rule", [ item("Stop while she still looks fast", "") ])
@@ -464,18 +552,18 @@
     const day4 = {
       day: "Day 4",
       focus: "Strength + Core",
-      tag: "Support running",
+      tag: `Variation ${variantLabel(v)} • Support running`,
       blocks: [
         block("Warm-up", [
           item("March → light jog", ""),
           item("Hip hinge practice", "")
         ]),
         block(`Main (Rounds: ${strengthRounds})`, [
-          item("Split Squat (short stance) — 6–8/side", ""),
-          item("DB Romanian Deadlift (light) — 8–10", "DB Romanian Deadlift"),
-          item("Band/DB Row — 10", "Band/DB Row"),
-          item("Side Plank — 20–30s/side", "Side Plank"),
-          item("Dead Bug — 8/side", "Dead Bug")
+          item(v === 1 ? "Split Squat (short stance, slow) — 6/side" : "Split Squat (short stance) — 6–8/side", ""),
+          hingeVar,
+          rowVar,
+          item(v === 2 ? "Side Plank — 25–35s/side" : "Side Plank — 20–30s/side", "Side Plank"),
+          item(v === 0 ? "Dead Bug — 8/side" : "Dead Bug — 10/side", "Dead Bug")
         ]),
         block("Rule", [
           item("No grinding reps. Perfect form only.", "")
@@ -486,15 +574,14 @@
     const day5 = {
       day: "Day 5",
       focus: "Aerobic Endurance",
-      tag: inSeason ? "Easy" : "Build"
-      ,
+      tag: inSeason ? "Easy" : "Build",
       blocks: [
         block("Option A: Cross trainer", [
-          item(`Easy–moderate — ${clamp(len, 25, 40)} min`, ""),
+          item(`Easy–moderate — ${clamp(aerobicMain + 8, 20, 40)} min`, ""),
           item("Smooth, steady pace", "")
         ]),
         block("Option B: Run/Walk (only if not too many team sessions)", [
-          item(inSeason ? "Keep it very easy (no hard intervals)." : "3 min run / 2 min walk × 6–8", ""),
+          item(inSeason ? "Keep it very easy (no hard intervals)." : (phase.name === "Sharpen" ? "4 min run / 2 min walk × 6" : "3 min run / 2 min walk × 6–8"), ""),
           item("If anything hurts: switch to cross trainer.", "")
         ])
       ]
@@ -505,7 +592,7 @@
       focus: "Fun Conditioning (Optional)",
       tag: "Play",
       blocks: [
-        block("Pick ONE (20–30 min)", [
+        block(inSeason ? "Pick ONE (10–25 min)" : "Pick ONE (20–30 min)", [
           item("Small-sided game / backyard drills", ""),
           item("Bike ride", ""),
           item("Obstacle course", ""),
