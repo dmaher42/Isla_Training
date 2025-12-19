@@ -648,6 +648,8 @@
   const elDays = document.getElementById("days");
   const elMeta = document.getElementById("weekMeta");
   const elWeek = document.getElementById("weekSelect");
+  const prevBtn = document.getElementById("prevWeek");
+  const nextBtn = document.getElementById("nextWeek");
 
   const elToast = document.getElementById("toast");
   const backdrop = document.getElementById("modalBackdrop");
@@ -685,13 +687,13 @@
   document.getElementById("effort").addEventListener("change", (e)=>{ settings.effort = e.target.value; save(KEY_SETTINGS, settings); render(); toast("Saved"); });
   elWeek.addEventListener("change", (e)=>{ settings.week = Number(e.target.value); save(KEY_SETTINGS, settings); render(); });
 
-  document.getElementById("prevWeek").addEventListener("click", ()=>{
+  prevBtn.addEventListener("click", ()=>{
     settings.week = Math.max(1, settings.week - 1);
     elWeek.value = String(settings.week);
     save(KEY_SETTINGS, settings);
     render();
   });
-  document.getElementById("nextWeek").addEventListener("click", ()=>{
+  nextBtn.addEventListener("click", ()=>{
     settings.week = Math.min(TOTAL_WEEKS, settings.week + 1);
     elWeek.value = String(settings.week);
     save(KEY_SETTINGS, settings);
@@ -776,6 +778,19 @@
 
     const phase = weekPhase(cfg.week);
     const plan = buildPlan(cfg);
+
+    const atFirstWeek = cfg.week <= 1;
+    const atLastWeek = cfg.week >= TOTAL_WEEKS;
+    if (prevBtn){
+      prevBtn.disabled = atFirstWeek;
+      prevBtn.setAttribute("aria-disabled", String(atFirstWeek));
+      prevBtn.title = atFirstWeek ? "You're at the first week" : "Go to previous week";
+    }
+    if (nextBtn){
+      nextBtn.disabled = atLastWeek;
+      nextBtn.setAttribute("aria-disabled", String(atLastWeek));
+      nextBtn.title = atLastWeek ? "You've reached the final week" : "Go to next week";
+    }
 
     // meta counts
     let done = 0, skip = 0;
