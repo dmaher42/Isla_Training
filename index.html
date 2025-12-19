@@ -83,7 +83,7 @@
       gap:var(--s3);
       padding:var(--s3);
       margin-top:var(--s3);
-      border:1px solid var(--line);
+      border:1px solid rgba(15,23,42,0.06);
       border-radius:18px;
       background:linear-gradient(180deg, rgba(234,242,255,.85), #fff);
       box-shadow:var(--shadow2);
@@ -98,7 +98,7 @@
     .days{display:flex; flex-direction:column; gap:var(--s3); margin-top:var(--s3)}
     .day{
       background:var(--panel);
-      border:1px solid var(--line);
+      border:1px solid rgba(15,23,42,0.06);
       border-radius:18px;
       box-shadow:var(--shadow2);
       overflow:hidden;
@@ -109,7 +109,7 @@
     .rail{
       flex:0 0 255px;
       padding:var(--s3);
-      border-right:1px solid rgba(197, 212, 238, 0.8);
+      border-right:1px solid rgba(15,23,42,0.06);
       background:linear-gradient(180deg, rgba(226,238,255,.90), var(--panel));
       display:flex;
       flex-direction:column;
@@ -121,12 +121,13 @@
     .body{flex:1; padding:var(--s3); display:flex; flex-direction:column; gap:14px}
     .blk{
       background:#f0f4ff;
-      border:1px solid rgba(197, 212, 238, 0.9);
+      border:1px solid rgba(15,23,42,0.05);
       border-radius:14px;
       padding:12px;
       display:flex;
       flex-direction:column;
       gap:6px;
+      box-shadow:0 1px 0 rgba(15,23,42,0.04), 0 6px 16px rgba(15,23,42,0.06);
     }
     .blk h3{margin:0; font-size:var(--t-md)}
     ul{margin:6px 0 0 18px}
@@ -215,16 +216,21 @@
 
     html[data-theme="dark"] .rail{
       background:linear-gradient(180deg, rgba(138,180,255,.12), var(--panel));
-      border-right-color: rgba(37, 54, 86, 0.8);
+      border-right-color: rgba(255,255,255,0.08);
     }
 
     html[data-theme="dark"] .blk{
       background:rgba(138,180,255,.10);
-      border-color: rgba(37, 54, 86, 0.9);
+      border-color: rgba(255,255,255,0.06);
     }
 
     html[data-theme="dark"] .week-meta{
       background:linear-gradient(180deg, rgba(138,180,255,.14), var(--panel));
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    html[data-theme="dark"] .day{
+      border-color: rgba(255,255,255,0.08);
     }
 
     html[data-theme="dark"] button,
