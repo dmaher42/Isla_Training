@@ -109,7 +109,7 @@
     .rail{
       flex:0 0 255px;
       padding:var(--s3);
-      border-right:1px solid var(--line);
+      border-right:1px solid rgba(197, 212, 238, 0.8);
       background:linear-gradient(180deg, rgba(226,238,255,.90), var(--panel));
       display:flex;
       flex-direction:column;
@@ -121,9 +121,9 @@
     .body{flex:1; padding:var(--s3); display:flex; flex-direction:column; gap:14px}
     .blk{
       background:#f0f4ff;
-      border:1px solid var(--line);
+      border:1px solid rgba(197, 212, 238, 0.9);
       border-radius:14px;
-      padding:14px;
+      padding:12px;
       display:flex;
       flex-direction:column;
       gap:6px;
@@ -215,10 +215,12 @@
 
     html[data-theme="dark"] .rail{
       background:linear-gradient(180deg, rgba(138,180,255,.12), var(--panel));
+      border-right-color: rgba(37, 54, 86, 0.8);
     }
 
     html[data-theme="dark"] .blk{
       background:rgba(138,180,255,.10);
+      border-color: rgba(37, 54, 86, 0.9);
     }
 
     html[data-theme="dark"] .week-meta{
