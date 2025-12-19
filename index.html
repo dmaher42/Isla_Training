@@ -654,6 +654,8 @@
   const modalTitle = document.getElementById("modalTitle");
   const modalSub = document.getElementById("modalSub");
   const modalContent = document.getElementById("modalContent");
+  const closeButton = document.getElementById("closeModal");
+  let lastFocus = null;
 
   // ---- settings
   const settings = load(KEY_SETTINGS, {
@@ -704,11 +706,12 @@
   });
 
   // modal controls
-  document.getElementById("closeModal").addEventListener("click", closeModal);
+  if (closeButton) closeButton.addEventListener("click", closeModal);
   backdrop.addEventListener("click", (e)=>{ if (e.target === backdrop) closeModal(); });
   document.addEventListener("keydown", (e)=>{ if (e.key === "Escape") closeModal(); });
 
   function openModal(exKeys){
+    lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     modalTitle.textContent = "Exercises";
     modalSub.textContent = "Pictures are optional. Add files under /assets/img/.";
     modalContent.innerHTML = "";
@@ -738,8 +741,12 @@
     });
 
     backdrop.classList.add("show");
+    if (closeButton) closeButton.focus();
   }
-  function closeModal(){ backdrop.classList.remove("show"); }
+  function closeModal(){
+    backdrop.classList.remove("show");
+    if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+  }
 
   // ---- status
   function statusKey(week){ return `w${week}`; }
