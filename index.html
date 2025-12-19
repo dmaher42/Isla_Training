@@ -4,26 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Training Plan</title>
+  <link rel="stylesheet" href="themes.css" />
+<script src="theme.js" defer></script>
   <style>
-    :root{
-      --bg:#f4f7fb;
-      --panel:#ffffff;
-      --muted:#475569;
-      --text:#0f172a;
-      --line:#d7e3f5;
-      --accent:#5f8df5;
-      --accent2:#8ab4ff;
-      --good:#10b981;
-      --warn:#f59e0b;
-      --bad:#ef4444;
-      --shadow:0 14px 30px rgba(15,23,42,.12);
-      --shadow2:0 10px 20px rgba(15,23,42,.08);
-      --r-lg:18px;
-      --r-md:14px;
-      --r-sm:10px;
-      --s1:6px; --s2:10px; --s3:14px; --s4:18px; --s5:22px;
-      --t-xs:12px; --t-sm:13px; --t-md:15px; --t-lg:18px; --t-xl:22px;
-    }
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -242,6 +225,7 @@
       </div>
     </div>
     <div class="controls">
+      <button id="themeToggle" aria-pressed="false" aria-label="Toggle theme">🌙 Dark</button>
       <button id="prevWeek" aria-label="Previous week">◀ Week</button>
       <select id="weekSelect" aria-label="Select week"></select>
       <button id="nextWeek" aria-label="Next week">Week ▶</button>
